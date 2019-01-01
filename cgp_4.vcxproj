@@ -16,7 +16,9 @@
     <ClCompile Include="src\misc_tools.cpp" />
     <ClCompile Include="src\picopng.cpp" />
     <ClCompile Include="src\RenderMaterial.cpp" />
+    <ClCompile Include="src\RenderSkyBox.cpp" />
     <ClCompile Include="src\RenderTarget.cpp" />
+    <ClCompile Include="src\RenderWater.cpp" />
     <ClCompile Include="src\Render_Utils.cpp" />
     <ClCompile Include="src\Shader_Loader.cpp" />
     <ClCompile Include="src\Texture.cpp" />
@@ -28,7 +30,9 @@
     <ClInclude Include="src\misc_tools.h" />
     <ClInclude Include="src\picopng.h" />
     <ClInclude Include="src\RenderMaterial.h" />
+    <ClInclude Include="src\RenderSkyBox.h" />
     <ClInclude Include="src\RenderTarget.h" />
+    <ClInclude Include="src\RenderWater.h" />
     <ClInclude Include="src\Render_Utils.h" />
     <ClInclude Include="src\Shader_Loader.h" />
     <ClInclude Include="src\Texture.h" />
@@ -39,6 +43,10 @@
     <None Include="shaders\shader_color.vert" />
     <None Include="shaders\shader_tex.frag" />
     <None Include="shaders\shader_tex.vert" />
+    <None Include="shaders\sky.frag" />
+    <None Include="shaders\sky.vert" />
+    <None Include="shaders\water.frag" />
+    <None Include="shaders\water.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1B448102-E76C-4347-BDC7-40D02A567DB6}</ProjectGuid>

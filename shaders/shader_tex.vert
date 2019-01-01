@@ -6,10 +6,13 @@ layout(location = 2) in vec3 vertexNormal;
 
 uniform mat4 modelViewProjectionMatrix;
 uniform mat4 modelMatrix;
+uniform vec4 clip_plane;
 
 out vec3 interpNormal;
 out vec3 interpPos;
 out vec2 interpTexCoord;
+
+float gl_ClipDistance[1];
 
 void main()
 {
@@ -17,4 +20,6 @@ void main()
 	interpNormal = normalize((modelMatrix * vec4(vertexNormal, 0.0)).xyz);
 	interpTexCoord = vertexTexCoord;
 	interpPos = (modelMatrix * vec4(vertexPosition, 1.0)).xyz;
+
+	gl_ClipDistance[0]=dot(modelMatrix*vec4(vertexPosition,1.0),clip_plane);
 }

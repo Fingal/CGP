@@ -15,7 +15,7 @@ uniform sampler2D  Talbedo;
 float ao;
 
 
-vec3 lightPos;
+uniform vec3 lightPos;
 vec3 lightColors;
 
 uniform vec3 cameraPos;
@@ -71,7 +71,6 @@ void main()
 	float roughness = texture2D(Troughness, interpTexCoord)[0];
 	vec3 albedo = texture2D(Talbedo, interpTexCoord).rgb;
 	lightColors = vec3(300.0);
-	lightPos = vec3(10.0);
 	ao = 1.0;
 
     vec3 N = normalize(interpNormal);

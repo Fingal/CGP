@@ -9,6 +9,15 @@
 RenderTarget::RenderTarget()
 {
 }
+void RenderTarget::drawElements() {
+	glDrawElements(
+		GL_TRIANGLES,      // mode
+		size,    // count
+		GL_UNSIGNED_SHORT,   // type
+		(void*)0           // element array buffer offset
+	);
+
+}
 
 void RenderTarget::loadModelFromFile(const char* fileName) {
 	obj::Model model = obj::loadModelFromFile(fileName);
@@ -47,12 +56,13 @@ void RenderTarget::setProgram(GLuint& program) {
 	glVertexAttribPointer(glUV, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(vertexSize * sizeof(float) + normalSize * sizeof(float)));
 	glBindVertexArray(0);
 }
-void RenderTarget::render(glm::mat4 transformation,glm::vec3 lightDir, glm::vec3 cameraPos) {
+void RenderTarget::render(glm::mat4 transformation, glm::vec3 lightDir, glm::vec3 cameraPos,glm::vec4 clipPlane) {
 	glUseProgram(program);
 	glBindVertexArray(VertexArray);
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VertexIndexBuffer);
-	glUniform3f(glGetUniformLocation(program, "lightDir"), lightDir.x, lightDir.y, lightDir.z);
+	glUniform3f(glGetUniformLocation(program, "lightPos"), lightDir.x, lightDir.y, lightDir.z);
 	glUniform3f(glGetUniformLocation(program, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
+	glUniform4fv(glGetUniformLocation(program, "clip_plane"), 1,(float*)&clipPlane);
 	glm::mat4 modelMatrix(1.0f);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&transformation);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_FALSE, (float*)&modelMatrix);
@@ -66,6 +76,9 @@ void RenderTarget::render(glm::mat4 transformation,glm::vec3 lightDir, glm::vec3
 	glUseProgram(0);
 }
 
+void RenderTarget::render(glm::mat4 transformation, glm::vec3 lightDir, glm::vec3 cameraPos) {
+	render(transformation, lightDir, cameraPos, glm::vec4(0.0));
+}
 RenderTarget::~RenderTarget()
 {
 }

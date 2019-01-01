@@ -17,13 +17,19 @@ class RenderTarget
 {
 public:
 	RenderTarget();
-	~RenderTarget();
-	RenderTarget(obj::Model& model, GLuint& program);
+	~RenderTarget(); 
+	
+	void drawElements();
+
 	void loadModelFromFile(const char * fileName);
 
 	void setProgram(GLuint & program);
 
+	void render(glm::mat4 transformation, glm::mat4 model, glm::vec3 lightDir, glm::vec3 cameraPos, glm::vec4 clipPlane);
+
 	void render(glm::mat4 transformation, glm::vec3 lightDir, glm::vec3 cameraPos);
+
+	void render(glm::mat4 transformation, glm::vec3 lightDir, glm::vec3 cameraPos, glm::vec4 clipPlane);
 
 	GLuint VertexIndexBuffer;
 	GLuint VertexBuffer;

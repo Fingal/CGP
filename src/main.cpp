@@ -13,25 +13,43 @@
 #include "Texture.h"
 #include "RenderTarget.h"
 #include "RenderMaterial.h"
+#include "RenderSkyBox.h"
+#include "RenderWater.h"
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
-
+double clipPlaneUp[] = { 0.0,1.0,0.0,-40000.0 };
+double clipPlaneDown[] = { 0.0,-1.0,0.0,0.0 };
 
 RenderMaterial sphere;
+RenderSkyBox skyBox;
+RenderWater water;
+
 
 GLuint programTexture;
+GLuint programSky;
+
+GLuint reflectTexture;
+GLuint reflectDepthTexture;
+GLuint reflectionFramebufferObject;
+
+GLuint refractTexture;
+GLuint refractDepthTexture;
+GLuint refractionFramebufferObject;
 
 Core::Shader_Loader shaderLoader;
 
-glm::vec3 cameraPos = glm::vec3(0, 0, 3);
+glm::vec3 cameraPos = glm::vec3(0, 2, 3);
 glm::vec3 cameraDir;
 glm::vec3 cameraSide;
 
 glm::mat4 cameraMatrix, perspectiveMatrix;
 
-glm::vec3 lightDir = glm::normalize(glm::vec3(1.0f, -0.9f, -1.0f));
+//glm::vec3 lightPos = (glm::vec3(12.5, 29, -16));
+glm::vec3 lightPos = (glm::vec3(12.5, 29, -16));
 
 glm::quat rotation = glm::quat(1, 0, 0, 0);
+glm::quat rotationReflected = glm::quat(1, 0, 0, 0);
+
 glm::vec3 rotationChangeXYZ = glm::vec3(0, 0, 0);
 
 
@@ -50,7 +68,8 @@ float quad[] = {
 	-0.25, -0.25, 0.0, 1.0
 };
 
-
+float sensitivity = 0.02;
+float flatten = 0.0;
 void keyboard(unsigned char key, int x, int y)
 {
 
@@ -58,18 +77,38 @@ void keyboard(unsigned char key, int x, int y)
 	float moveSpeed = 0.1f;
 	switch (key)
 	{
-	case 'z': rotationChangeXYZ.z += 0.1f; break;
-	case 'x': rotationChangeXYZ.z -= 0.1f; break;
+	//case 'z': rotationChangeXYZ.z += 0.1f; break;
+	//case 'x': rotationChangeXYZ.z -= 0.1f; break;
 	case 'w': cameraPos += cameraDir * moveSpeed; break;
 	case 's': cameraPos -= cameraDir * moveSpeed; break;
 	case 'd': cameraPos += cameraSide * moveSpeed; break;
 	case 'a': cameraPos -= cameraSide * moveSpeed; break;
+	case '+': sensitivity = (sensitivity < 0.2) ? sensitivity + 0.2 : 0.02; ; break;
+	case 'f': flatten = (flatten < 1.0) ? flatten + 0.1 : 0.00; ; break;
 	}
 }
 
 void mouse(int x, int y)
 {
-	
+	static int lastMouseX = x;
+	static int lastMouseY = y;
+	rotationChangeXYZ.y = sensitivity *(x - lastMouseX);
+	rotationChangeXYZ.x = sensitivity *(y - lastMouseY);
+	lastMouseX = x;
+	lastMouseY = y;
+}
+glm::mat4 createReflectedCameraMatrix()
+{
+	glm::vec3 reflectionRotation(-rotationChangeXYZ.x, rotationChangeXYZ.y, rotationChangeXYZ.z);
+	glm::vec3 reflectionPos(cameraPos.x, -cameraPos.y, cameraPos.z);
+	glm::vec3 x = rotation * glm::vec3(0,0,-1);
+
+	glm::quat rotationChange = glm::quat(reflectionRotation);
+	rotationReflected = rotationChange * rotationReflected;
+	rotationReflected = glm::normalize(rotationReflected);
+	reflectionRotation = glm::vec3(0);
+
+	return Core::createViewMatrixQuat(reflectionPos, rotationReflected);
 }
 
 glm::mat4 createCameraMatrix()
@@ -83,23 +122,115 @@ glm::mat4 createCameraMatrix()
 
 	return Core::createViewMatrixQuat(cameraPos, rotation);
 }
+
+
+
+
+void renderObjects(glm::mat4 prespectiveCameraMatrix, glm::vec4 clipPlane) {
+	skyBox.render(prespectiveCameraMatrix, clipPlane);
+	glm::mat4 planetModelMatrix = glm::translate(glm::vec3(1, 4, -2));
+	sphere.render(prespectiveCameraMatrix, planetModelMatrix, lightPos, cameraPos, clipPlane);
+
+
+	planetModelMatrix = glm::translate(glm::vec3(1, -4, 0));
+	sphere.render(prespectiveCameraMatrix, planetModelMatrix, lightPos, cameraPos, clipPlane);
+
+}
+void renderReflection()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, reflectionFramebufferObject);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	glEnable(GL_CLIP_PLANE0);
+
+	//std::cout << cameraPos.x << " " << cameraPos.y << " " << cameraPos.z << "\n";
+
+	glm::vec3 reflectionPos(cameraPos.x, -cameraPos.y, cameraPos.z);
+	glm::mat4 cameraMatrix = createReflectedCameraMatrix();
+	perspectiveMatrix = Core::createPerspectiveMatrix();
+	glm::mat4 prespectiveCameraMatrix = perspectiveMatrix * cameraMatrix;
+
+	renderObjects(prespectiveCameraMatrix, glm::vec4(0, 1, 0, 0));
+
+
+	glDisable(GL_CLIP_PLANE0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+void renderRefraction()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, refractionFramebufferObject);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	glEnable(GL_CLIP_PLANE0);
+
+	cameraMatrix = createCameraMatrix();
+	perspectiveMatrix = Core::createPerspectiveMatrix();
+	glm::mat4 prespectiveCameraMatrix = perspectiveMatrix * cameraMatrix;
+	if (cameraPos.y < 0) {
+		renderObjects(prespectiveCameraMatrix, glm::vec4(0, 1, 0, 0.5));
+	}
+	else {
+		renderObjects(prespectiveCameraMatrix, glm::vec4(0, -1, 0, -0.5));
+	}
+	
+	
+
+	glDisable(GL_CLIP_PLANE0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+}
+void initFBO(GLuint& FBO, GLuint& colorTexture, GLuint& depthTexture) {
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	//Generate depth texture
+	glGenTextures(1, &colorTexture);
+	glBindTexture(GL_TEXTURE_2D, colorTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1024, 1024, 0, GL_RGB, GL_FLOAT, NULL);
+
+	//Filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	//Attach color texture to frame buffer
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
+
+
+	glGenTextures(1, &depthTexture);
+	glBindTexture(GL_TEXTURE_2D, depthTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+	//Filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	//Attach depth texture to frame buffer
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void renderScene()
 {
 	
-	
+	renderReflection();
+	renderRefraction();
 	cameraMatrix = createCameraMatrix();
 	perspectiveMatrix = Core::createPerspectiveMatrix();
+	glm::mat4 prespectiveCameraMatrix = perspectiveMatrix * cameraMatrix;
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.1f, 0.10f, 0.10f, 0.10f);
-	
+	glClearColor(1.0f, 0.10f, 0.10f, 0.10f);
 
-	glm::mat4 planetModelMatrix(1.0f);
 
-	glm::mat4 transformation = perspectiveMatrix * cameraMatrix * planetModelMatrix;
-	// TODO: draw 25 spheres with varying metallic and roughness parameter values
-	//drawObjectTexture(&sphereModel, planetModelMatrix, textureEarth);
-	sphere.render(transformation, lightDir, cameraPos);
+	renderObjects(prespectiveCameraMatrix, glm::vec4(0, 0, 0, 0));
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	water.render(perspectiveMatrix, cameraMatrix, lightPos,cameraPos);
+	glDisable(GL_BLEND);
 	glutSwapBuffers();
 }
 
@@ -107,12 +238,28 @@ void init()
 {
 	srand(time(0));
 	glEnable(GL_DEPTH_TEST);
+	programSky = shaderLoader.CreateProgram("shaders/sky.vert", "shaders/sky.frag");
 	programTexture = shaderLoader.CreateProgram("shaders/shader_tex.vert", "shaders/shader_tex.frag");
-	
+
+
+	skyBox = RenderSkyBox();
+	skyBox.init();
+	skyBox.setProgram(programSky);
+
+
 	sphere = RenderMaterial();
 	sphere.loadModelFromFile("models/sphere.obj");
 	sphere.setProgram(programTexture);
 	sphere.loadMaterial("textures/rustediron2_roughness.png", "textures/rustediron2_metallic.png", "textures/rustediron2_basecolor.png");
+
+
+
+	initFBO(reflectionFramebufferObject, reflectTexture, reflectDepthTexture);
+	initFBO(refractionFramebufferObject, refractTexture, refractDepthTexture);
+
+
+	water = RenderWater();
+	water.init(reflectTexture, refractTexture, refractDepthTexture);
 }
 
 void shutdown()	
@@ -130,7 +277,7 @@ int main(int argc, char ** argv)
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
 	glutInitWindowPosition(200, 200);
-	glutInitWindowSize(800, 800);
+	glutInitWindowSize(1024, 1024);
 	glutCreateWindow("CGP");
 	glewInit();
 
