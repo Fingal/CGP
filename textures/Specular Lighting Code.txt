@@ -1,4 +1,0 @@
-	vec3 reflectedLight = reflect(normalize(fromLightVector), normal);
-	float specular = max(dot(reflectedLight, viewVector), 0.0);
-	specular = pow(specular, shineDamper);
-	vec3 specularHighlights = lightColour * specular * reflectivity;

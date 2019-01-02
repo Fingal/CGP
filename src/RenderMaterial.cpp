@@ -21,8 +21,8 @@ void RenderMaterial::render(glm::mat4 perspectiveCamera,glm::mat4 modelMatrix, g
 	Core::SetActiveTexture(textureMetallic, "Tmetallic", program, 0);
 	Core::SetActiveTexture(textureRoughness, "Troughness", program, 1);
 	Core::SetActiveTexture(textureAlbedo, "Talbedo", program, 2);
-	glm::mat4 transformation = perspectiveCamera * modelMatrix;
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&transformation);
+	glm::mat4 transformation = perspectiveCamera;
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&perspectiveCamera);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_FALSE, (float*)&modelMatrix);
 	glDrawElements(
 		GL_TRIANGLES,      // mode

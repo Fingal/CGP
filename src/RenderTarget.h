@@ -42,5 +42,7 @@ public:
 	int vertexSize;
 	int normalSize;
 	int size;
+protected:
+	void _loadFromModel(obj::Model& model);
 };
 

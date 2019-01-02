@@ -21,6 +21,9 @@ void RenderTarget::drawElements() {
 
 void RenderTarget::loadModelFromFile(const char* fileName) {
 	obj::Model model = obj::loadModelFromFile(fileName);
+	_loadFromModel(model);
+}
+void RenderTarget::_loadFromModel(obj::Model& model) {
 	glGenVertexArrays(1, &VertexArray);
 	glBindVertexArray(VertexArray);
 
@@ -40,6 +43,7 @@ void RenderTarget::loadModelFromFile(const char* fileName) {
 	size = model.faces["default"].size();
 	vertexSize = model.vertex.size();
 	normalSize = model.normal.size();
+
 }
 void RenderTarget::setProgram(GLuint& program) {
 	glBindVertexArray(VertexArray);

@@ -16,7 +16,7 @@ float gl_ClipDistance[1];
 
 void main()
 {
-	gl_Position = modelViewProjectionMatrix * vec4(vertexPosition, 1.0);
+	gl_Position = modelViewProjectionMatrix * modelMatrix * vec4(vertexPosition, 1.0);
 	interpNormal = normalize((modelMatrix * vec4(vertexNormal, 0.0)).xyz);
 	interpTexCoord = vertexTexCoord;
 	interpPos = (modelMatrix * vec4(vertexPosition, 1.0)).xyz;

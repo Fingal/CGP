@@ -188,5 +188,5 @@ void main()
 	color = refractColor;
 	}
 	color = mix(color,vec3(0.5,0.75,1.0),0.2);
-	gl_FragColor = vec4(color , clamp(distance/5,0.0,1.0));
+	gl_FragColor = vec4(color , clamp(distance/10,0.0,1.0));
 }

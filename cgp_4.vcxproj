@@ -16,6 +16,7 @@
     <ClCompile Include="src\misc_tools.cpp" />
     <ClCompile Include="src\picopng.cpp" />
     <ClCompile Include="src\RenderMaterial.cpp" />
+    <ClCompile Include="src\RenderNormalMap.cpp" />
     <ClCompile Include="src\RenderSkyBox.cpp" />
     <ClCompile Include="src\RenderTarget.cpp" />
     <ClCompile Include="src\RenderWater.cpp" />
@@ -30,6 +31,7 @@
     <ClInclude Include="src\misc_tools.h" />
     <ClInclude Include="src\picopng.h" />
     <ClInclude Include="src\RenderMaterial.h" />
+    <ClInclude Include="src\RenderNormalMap.h" />
     <ClInclude Include="src\RenderSkyBox.h" />
     <ClInclude Include="src\RenderTarget.h" />
     <ClInclude Include="src\RenderWater.h" />

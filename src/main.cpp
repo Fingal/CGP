@@ -21,6 +21,7 @@ double clipPlaneUp[] = { 0.0,1.0,0.0,-40000.0 };
 double clipPlaneDown[] = { 0.0,-1.0,0.0,0.0 };
 
 RenderMaterial sphere;
+RenderMaterial boat;
 RenderSkyBox skyBox;
 RenderWater water;
 
@@ -128,12 +129,14 @@ glm::mat4 createCameraMatrix()
 
 void renderObjects(glm::mat4 prespectiveCameraMatrix, glm::vec4 clipPlane) {
 	skyBox.render(prespectiveCameraMatrix, clipPlane);
-	glm::mat4 planetModelMatrix = glm::translate(glm::vec3(1, 4, -2));
-	sphere.render(prespectiveCameraMatrix, planetModelMatrix, lightPos, cameraPos, clipPlane);
+	glm::mat4 modelMatrix = glm::translate(glm::vec3(1, -0.3, -4))*glm::scale(glm::vec3(0.2));
+	boat.render(prespectiveCameraMatrix, modelMatrix, lightPos, cameraPos, clipPlane);
 
 
-	planetModelMatrix = glm::translate(glm::vec3(1, -4, 0));
-	sphere.render(prespectiveCameraMatrix, planetModelMatrix, lightPos, cameraPos, clipPlane);
+	modelMatrix = glm::translate(glm::vec3(19, 0, 5));
+	sphere.render(prespectiveCameraMatrix, modelMatrix, lightPos, cameraPos, clipPlane);
+	modelMatrix = glm::translate(glm::vec3(8, -4, 0));
+	sphere.render(prespectiveCameraMatrix, modelMatrix, lightPos, cameraPos, clipPlane);
 
 }
 void renderReflection()
@@ -151,7 +154,7 @@ void renderReflection()
 	perspectiveMatrix = Core::createPerspectiveMatrix();
 	glm::mat4 prespectiveCameraMatrix = perspectiveMatrix * cameraMatrix;
 
-	renderObjects(prespectiveCameraMatrix, glm::vec4(0, 1, 0, 0));
+	renderObjects(prespectiveCameraMatrix, glm::vec4(0, 1, 0, -0.1));
 
 
 	glDisable(GL_CLIP_PLANE0);
@@ -170,10 +173,10 @@ void renderRefraction()
 	perspectiveMatrix = Core::createPerspectiveMatrix();
 	glm::mat4 prespectiveCameraMatrix = perspectiveMatrix * cameraMatrix;
 	if (cameraPos.y < 0) {
-		renderObjects(prespectiveCameraMatrix, glm::vec4(0, 1, 0, 0.5));
+		renderObjects(prespectiveCameraMatrix, glm::vec4(0, 1, 0, 0.0));
 	}
 	else {
-		renderObjects(prespectiveCameraMatrix, glm::vec4(0, -1, 0, -0.5));
+		renderObjects(prespectiveCameraMatrix, glm::vec4(0, -1, 0, -0.0));
 	}
 	
 	
@@ -226,10 +229,10 @@ void renderScene()
 	glClearColor(1.0f, 0.10f, 0.10f, 0.10f);
 
 
-	renderObjects(prespectiveCameraMatrix, glm::vec4(0, 0, 0, 0));
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	water.render(perspectiveMatrix, cameraMatrix, lightPos,cameraPos);
+	renderObjects(prespectiveCameraMatrix, glm::vec4(0, 0, 0, 0));
+	water.render(perspectiveMatrix, cameraMatrix, lightPos, cameraPos);
 	glDisable(GL_BLEND);
 	glutSwapBuffers();
 }
@@ -240,6 +243,11 @@ void init()
 	glEnable(GL_DEPTH_TEST);
 	programSky = shaderLoader.CreateProgram("shaders/sky.vert", "shaders/sky.frag");
 	programTexture = shaderLoader.CreateProgram("shaders/shader_tex.vert", "shaders/shader_tex.frag");
+
+	boat = RenderMaterial();
+	boat.loadModelFromFile("models/OldBoat.obj");
+	boat.setProgram(programTexture);
+	boat.loadMaterial("textures/boat_roughness.png", "textures/boat_metallic.png", "textures/boat_tex.png");
 
 
 	skyBox = RenderSkyBox();
