@@ -4,14 +4,14 @@
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 const float vertices[]{
-	30.5f, 30.5f, 30.5f,
-	30.5f, 30.5f, -30.5f,
-	30.5f, -30.5f, 30.5f,
-	30.5f, -30.5f, -30.5f,
-	-30.5f, 30.5f, 30.5f,
-	-30.5f, 30.5f, -30.5f,
-	-30.5f, -30.5f, 30.5f,
-	-30.5f, -30.5f, -30.5f,
+	45.0f, 45.0f, 45.0f,
+	45.0f, 45.0f, -45.0f,
+	45.0f, -45.0f, 45.0f,
+	45.0f, -45.0f, -45.0f,
+	-45.0f, 45.0f, 45.0f,
+	-45.0f, 45.0f, -45.0f,
+	-45.0f, -45.0f, 45.0f,
+	-45.0f, -45.0f, -45.0f,
 
 };
 
@@ -103,12 +103,13 @@ void RenderSkyBox::setProgram(GLuint& program) {
 	glVertexAttribPointer(glPos, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 	glBindVertexArray(0);
 }
-void RenderSkyBox::render(glm::mat4 perspectiveCameraMatrix,glm::vec4 clipPlane) {
+void RenderSkyBox::render(glm::mat4 perspectiveCameraMatrix,glm::vec4 clipPlane,glm::vec3 cameraPos) {
 	glUseProgram(program);
 	glBindVertexArray(VertexArray);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 	glUniform4fv(glGetUniformLocation(program, "clip_plane"), 1, (float*)&clipPlane);
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&perspectiveCameraMatrix);
+	glm::mat4 MVP = perspectiveCameraMatrix * glm::translate(glm::vec3(cameraPos.x, 0, cameraPos.z));
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&MVP);
 	glDrawElements(
 		GL_TRIANGLES,      // mode
 		36,    // count
@@ -119,8 +120,8 @@ void RenderSkyBox::render(glm::mat4 perspectiveCameraMatrix,glm::vec4 clipPlane)
 	glUseProgram(0);
 
 }
-void RenderSkyBox::render(glm::mat4 perspectiveCameraMatrix) {
-	render(perspectiveCameraMatrix, glm::vec4(0.0));
+void RenderSkyBox::render(glm::mat4 perspectiveCameraMatrix,glm::vec3 cameraPos) {
+	render(perspectiveCameraMatrix, glm::vec4(0.0), cameraPos);
 
 }
 

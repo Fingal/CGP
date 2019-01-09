@@ -12,9 +12,9 @@ public:
 
 	void setProgram(GLuint & program);
 
-	void render(glm::mat4 perspectiveCameraMatrix, glm::vec4 clipPlane);
+	void render(glm::mat4 perspectiveCameraMatrix, glm::vec4 clipPlane, glm::vec3 cameraPos);
 
-	void render(glm::mat4 perspectiveCameraMatrix);
+	void render(glm::mat4 perspectiveCameraMatrix, glm::vec3 cameraPos);
 
 
 	~RenderSkyBox();

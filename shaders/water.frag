@@ -5,6 +5,7 @@ uniform sampler2D refractSampler;
 uniform sampler2D dudvSampler;
 uniform sampler2D normalSampler;
 uniform sampler2D depthSampler;
+uniform sampler2D shadowSampler;
 
 uniform float time;
 uniform vec3 cameraPos;
@@ -15,6 +16,8 @@ in vec3 cameraDirection;
 in vec2 texDirection;
 in vec4 clipSpace;
 in vec3 vertexPos;
+
+in vec4 lightSpacePos;
 
 const float n_2 = 1.33;
 const float PI = 3.14159265359;
@@ -129,10 +132,23 @@ vec3 countSpecular()
 float countDistance(vec2 coord){
 	float depth = texture(depthSampler, coord).r;
 	float near = 0.1;
-	float far = 100.0;
+	float far = 200.0;
 	float floorDistance = 2.0 * near * far / (far + near - (2.0 * depth - 1.0) * (far - near));
 	float waterDistance = 2.0 * near * far / (far + near - (2.0 * gl_FragCoord.z - 1.0) * (far - near));
 	return floorDistance - waterDistance;
+
+}
+
+
+float calculate_shadow()
+{
+	vec3 position = (lightSpacePos.xyz/lightSpacePos.w)*0.5+0.5;
+	float closest = texture2D(shadowSampler,position.xy).r;
+	float current = position.z;
+	//float bias = max(0.05*(1-dot(vec3(0,1,0),normalize(lightPos))),0.005);
+	float bias = 0.0;
+	float shadow = current - bias < closest ? 0.0 : 0.90;
+	return shadow;
 
 }
 
@@ -181,12 +197,15 @@ void main()
 
 	if (cameraPos.y>=-0.01){
 	//color  = vec3(0,0,1)*pow(dot(normalize(cameraPos-vertexPos),normal),5);
-	vec3 specular = countSpecular()*clamp(distance/10,0.0,1.0);
+	vec3 specular = countSpecular()*clamp(distance/4.0,0.0,1.0)*(1-calculate_shadow());
 	color = mix(refractColor,reflectColor,schlick) + specular;
 	}
 	else{
 	color = refractColor;
 	}
 	color = mix(color,vec3(0.5,0.75,1.0),0.2);
-	gl_FragColor = vec4(color , clamp(distance/10,0.0,1.0));
+	//color = mix(color,vec3(0.0),calculate_shadow());
+
+	gl_FragColor = vec4(color , clamp(distance/4.0,0.0,1.0));
+	
 }

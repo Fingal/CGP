@@ -2,10 +2,10 @@
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
 const float vertices[]{
-	30.5f, -0.0f, 30.5f,
-	30.5f, -0.0f, -30.5f,
-	-30.5f, -0.0f, 30.5f,
-	-30.5f, -0.0f, -30.5f,
+	300.5f, -0.0f, 300.5f,
+	300.5f, -0.0f, -300.5f,
+	-300.5f, -0.0f, 300.5f,
+	-300.5f, -0.0f, -300.5f,
 
 };
 
@@ -61,7 +61,7 @@ void RenderWater::init(GLuint& reflectTexture, GLuint& refractTrexture, GLuint& 
 
 }
 
-void RenderWater::render(glm::mat4 perspectiveMatrix, glm::mat4  cameraMatrix, glm::vec3 lightPos, glm::vec3 cameraPos) {
+void RenderWater::render(glm::mat4 perspectiveMatrix, glm::mat4  cameraMatrix, glm::mat4 lightMVP, glm::vec3 lightPos, glm::vec3 cameraPos) {
 	float time = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
 	glm::mat4 transformation = perspectiveMatrix * cameraMatrix;
 	glUseProgram(program);
@@ -71,7 +71,9 @@ void RenderWater::render(glm::mat4 perspectiveMatrix, glm::mat4  cameraMatrix, g
 	Core::SetActiveTexture(dUdVTexture, "dudvSampler", program, 2);
 	Core::SetActiveTexture(normalTexture, "normalSampler", program, 3);
 	Core::SetActiveTexture(refractDepthTrexture, "depthSampler", program, 4);
+	Core::SetActiveTexture(depthTexture, "shadowSampler", program, 5);
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&transformation);
+	glUniformMatrix4fv(glGetUniformLocation(program, "lightMVP"), 1, GL_FALSE, (float*)&lightMVP);
 	glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, (float*)&cameraPos);
 	glUniform3fv(glGetUniformLocation(program, "lightPos"), 1, (float*)&lightPos);
 	glUniform1f(glGetUniformLocation(program, "time"), time);

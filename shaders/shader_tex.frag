@@ -1,113 +1,39 @@
-#version 330 core
-
-
-
-out vec4 FragColor;
-in vec2 vertexTexCoord;
-in vec3 interpPos;
-in vec3 interpNormal;
-in vec2 interpTexCoord;
-
-// material parameters
-uniform sampler2D  Tmetallic;
-uniform sampler2D  Troughness;
-uniform sampler2D  Talbedo;
-float ao;
-
+#version 430 core
 
 uniform vec3 lightPos;
-vec3 lightColors;
-
 uniform vec3 cameraPos;
 
-const float PI = 3.14159265359;
-  
-float Distribution(vec3 N, vec3 H, float roughness)
+
+uniform sampler2D colorTexture;
+uniform sampler2D  shadowSampler;
+
+
+in vec3 interpNormal;
+in vec2 interpTexCoord;
+in vec3 interpPosition;
+in vec4 lightSpacePos;
+
+float calculate_shadow(vec3 normal)
 {
-    float a      = roughness*roughness;
-    float a2     = a*a;
-    float NdotH  = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH*NdotH;
-	
-    float num   = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-	
-    return num / denom;
+	vec3 position = (lightSpacePos.xyz/lightSpacePos.w)*0.5+0.5;
+	float closest = texture2D(shadowSampler,position.xy).r;
+	float current = position.z;
+	float bias = max(0.05*(1-dot(normal,normalize(lightPos))),0.005);
+	bias = 0.02;
+	float shadow = current - bias < closest ? 0.0 : 1.0;
+	return shadow;
+
 }
-
-float GeometrySchlickS1(float NdotV, float roughness)
-{
-    float r = (roughness + 1.0);
-    float k = (r*r) / 8.0;
-
-    float num   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-	
-    return num / denom;
-}
-
-
-float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
-{
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2  = GeometrySchlickS1(NdotV, roughness);
-    float ggx1  = GeometrySchlickS1(NdotL, roughness);
-	
-    return ggx1 * ggx2;
-}
-
-vec3 fresnelSchlick(float cosTheta, vec3 F0)
-{
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}  
-
-
-
 void main()
-{		
-	float metallic = texture2D(Tmetallic, interpTexCoord)[0];
-	float roughness = texture2D(Troughness, interpTexCoord)[0];
-	vec3 albedo = texture2D(Talbedo, interpTexCoord).rgb;
-	lightColors = vec3(300.0);
-	ao = 1.0;
+{
+	vec3 normal = normalize(interpNormal);
+	//lightDir = lightVec;
+	//vec3 normal = normalize(2.0 * texture2D (normalMap, interpTexCoord.st).rgb - 1.0);
+	vec3 toEye = normalize(cameraPos - interpPosition);
+	//vec3 toEye = normalize(tang - eyeVec);
+	float diffuse = max(dot(normal, -normalize(interpPosition-lightPos)), 0.1);
 
-    vec3 N = normalize(interpNormal);
-    vec3 V = normalize(cameraPos - interpPos);
-
-    vec3 F0 = vec3(0.045);
-	
-	// calculate F0 value taking material properties into account
-    F0 = mix(F0, albedo, metallic);
-
-    // calculate radiance
-    vec3 L = normalize(lightPos - interpPos);
-    vec3 H = normalize(V + L);
-    float distance    = length(lightPos - interpPos);
-    float attenuation = 1.0 / (distance * distance);
-    vec3 radiance     = lightColors * attenuation;        
-        
-    // BRDF TODO:
-	// ...
-	vec3 kS = F0;
-	vec3 kD = vec3(1.0) - kS;
-	kD *= 1.0 - metallic;
-
-            
-    // calculate outgoing radiance Lo
-    float NdotL = max(dot(N, L), 0.0);
-    //float G = GeometrySmith(N, V, L, roughness) ;
-    //float D = Distribution(N, H, roughness);
-    //vec3 F = fresnelSchlick(max(dot(L, H),0), F0);
-    //vec3 specular = (F * G * D) / (4 * max(dot(N, V), 0.01) * max(dot(N, L), 0.01));
-	vec3 specular = (fresnelSchlick(dot(L,H),F0) *  GeometrySmith(N, V, L, roughness) * Distribution(N,H,roughness)) / (4 * max(dot(N, L),0.01) * max(dot(N, V),0.01));
-    vec3 Lo =  4.0*(kD * albedo / PI + specular) * radiance * NdotL; 
-  
-    vec3 ambient = vec3(0.01) * albedo * ao;
-    vec3 color = ambient + Lo;
-    color = color / (color + vec3(1.0));
-    color = pow(color, vec3(1.0/2.0));  
-   
-    FragColor = vec4(color, 1.0);
-}  
+	float specular = pow(max(dot(toEye, reflect(normalize(interpPosition-lightPos), normal)), 0.0), 30.0);
+	float shadow = calculate_shadow(normal);
+	gl_FragColor = vec4(texture2D(colorTexture, interpTexCoord).rgb * diffuse * (1- 0.8*calculate_shadow(normal)) + vec3(1.0) * specular*(1-calculate_shadow(normal)), 1.0);
+}

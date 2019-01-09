@@ -60,16 +60,41 @@ void RenderTarget::setProgram(GLuint& program) {
 	glVertexAttribPointer(glUV, 2, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(vertexSize * sizeof(float) + normalSize * sizeof(float)));
 	glBindVertexArray(0);
 }
-void RenderTarget::render(glm::mat4 transformation, glm::vec3 lightDir, glm::vec3 cameraPos,glm::vec4 clipPlane) {
+void RenderTarget::setShadowProgram(GLuint& sProgram, GLuint& depthTexture) {
+	this->depthTexture = depthTexture;
+	glBindVertexArray(VertexArray);
+	this->shadowProgram = sProgram;
+	glPos = glGetAttribLocation(shadowProgram, "vertexPosition");
+	glEnableVertexAttribArray(glPos);
+	glVertexAttribPointer(glPos, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
+	glBindVertexArray(0);
+
+}
+void RenderTarget::renderShadow(glm::mat4 lightMVP) {
+	glUseProgram(shadowProgram);
+	glBindVertexArray(VertexArray);
+	glUniformMatrix4fv(glGetUniformLocation(shadowProgram, "lightMVPMatrix"), 1, GL_FALSE, (float*)&lightMVP);
+	glDrawElements(
+		GL_TRIANGLES,      // mode
+		size,    // count
+		GL_UNSIGNED_SHORT,   // type
+		(void*)0           // element array buffer offset
+	);
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+}
+void RenderTarget::render(glm::mat4 lightProjection, glm::mat4 model, glm::vec3 lightDir, glm::vec3 cameraPos, glm::vec4 clipPlane) {
 	glUseProgram(program);
 	glBindVertexArray(VertexArray);
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VertexIndexBuffer);
 	glUniform3f(glGetUniformLocation(program, "lightPos"), lightDir.x, lightDir.y, lightDir.z);
 	glUniform3f(glGetUniformLocation(program, "cameraPos"), cameraPos.x, cameraPos.y, cameraPos.z);
 	glUniform4fv(glGetUniformLocation(program, "clip_plane"), 1,(float*)&clipPlane);
+	Core::SetActiveTexture(depthTexture, "shadowSampler", program, 0);
 	glm::mat4 modelMatrix(1.0f);
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&transformation);
-	glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_FALSE, (float*)&modelMatrix);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&lightProjection);
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelMatrix"), 1, GL_FALSE, (float*)&model);
 	glDrawElements(
 		GL_TRIANGLES,      // mode
 		size,    // count
@@ -80,8 +105,8 @@ void RenderTarget::render(glm::mat4 transformation, glm::vec3 lightDir, glm::vec
 	glUseProgram(0);
 }
 
-void RenderTarget::render(glm::mat4 transformation, glm::vec3 lightDir, glm::vec3 cameraPos) {
-	render(transformation, lightDir, cameraPos, glm::vec4(0.0));
+void RenderTarget::render(glm::mat4 lightProjection, glm::mat4 model, glm::vec3 lightDir, glm::vec3 cameraPos) {
+	render(lightProjection, model, lightDir, cameraPos, glm::vec4(0.0));
 }
 RenderTarget::~RenderTarget()
 {

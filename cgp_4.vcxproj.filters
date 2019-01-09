@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{64798953-fc0a-4c89-8767-76f67ab2c9fb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Render_Utils.cpp">
@@ -51,29 +54,14 @@
     <ClCompile Include="src\RenderNormalMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\RenderBundle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Render_Utils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Shader_Loader.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Camera.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\picopng.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Texture.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Header.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\misc_tools.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="VAOModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -83,27 +71,85 @@
     <ClInclude Include="RenderMaterial.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\RenderMaterial.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\RenderSkyBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\RenderWater.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="src\Texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Header.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\misc_tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\picopng.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render_Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RenderMaterial.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\RenderNormalMap.h">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RenderTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\RenderWater.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Shader_Loader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Camera.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\shader_color.frag" />
-    <None Include="shaders\shader_color.vert" />
-    <None Include="shaders\shader_tex.frag" />
-    <None Include="shaders\shader_tex.vert" />
-    <None Include="shaders\sky.frag" />
-    <None Include="shaders\sky.vert" />
-    <None Include="shaders\water.frag" />
-    <None Include="shaders\water.vert" />
+    <None Include="shaders\water.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_color.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_color.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_depth.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_depth.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_material.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_material.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_material_normal.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_material_normal.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_tex.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\shader_tex.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\sky.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\sky.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\water.frag">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

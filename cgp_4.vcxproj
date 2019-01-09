@@ -15,10 +15,12 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\misc_tools.cpp" />
     <ClCompile Include="src\picopng.cpp" />
+    <ClCompile Include="src\RenderBundle.cpp" />
     <ClCompile Include="src\RenderMaterial.cpp" />
     <ClCompile Include="src\RenderNormalMap.cpp" />
     <ClCompile Include="src\RenderSkyBox.cpp" />
     <ClCompile Include="src\RenderTarget.cpp" />
+    <ClCompile Include="src\RenderTexture.cpp" />
     <ClCompile Include="src\RenderWater.cpp" />
     <ClCompile Include="src\Render_Utils.cpp" />
     <ClCompile Include="src\Shader_Loader.cpp" />
@@ -34,6 +36,7 @@
     <ClInclude Include="src\RenderNormalMap.h" />
     <ClInclude Include="src\RenderSkyBox.h" />
     <ClInclude Include="src\RenderTarget.h" />
+    <ClInclude Include="src\RenderTexture.h" />
     <ClInclude Include="src\RenderWater.h" />
     <ClInclude Include="src\Render_Utils.h" />
     <ClInclude Include="src\Shader_Loader.h" />
@@ -43,6 +46,12 @@
   <ItemGroup>
     <None Include="shaders\shader_color.frag" />
     <None Include="shaders\shader_color.vert" />
+    <None Include="shaders\shader_depth.frag" />
+    <None Include="shaders\shader_depth.vert" />
+    <None Include="shaders\shader_material.frag" />
+    <None Include="shaders\shader_material.vert" />
+    <None Include="shaders\shader_material_normal.frag" />
+    <None Include="shaders\shader_material_normal.vert" />
     <None Include="shaders\shader_tex.frag" />
     <None Include="shaders\shader_tex.vert" />
     <None Include="shaders\sky.frag" />
