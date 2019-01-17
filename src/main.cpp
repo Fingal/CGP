@@ -98,6 +98,8 @@ float quad[] = {
 
 float sensitivity = 0.02;
 float flatten = 0.0;
+float coef1 = 0.0;
+float coef2 = 0.0;
 void keyboard(unsigned char key, int x, int y)
 {
 
@@ -112,6 +114,8 @@ void keyboard(unsigned char key, int x, int y)
 	case 'd': cameraPos += cameraSide * moveSpeed; break;
 	case 'a': cameraPos -= cameraSide * moveSpeed; break;
 	case '+': sensitivity = (sensitivity < 0.2) ? sensitivity + 0.2 : 0.02; ; break;
+	case '1': coef1 = (coef1 < 1.0) ? coef1 + 0.1 : 0.00; ; break;
+	case '2': coef2 = (coef2 < 1.0) ? coef1 + 0.1 : 0.00; ; break;
 	case 'f': flatten = flatten + 0.1; ; break;
 	case 'l': lightPos = lightPoses[(lightIndex++)%4]; ; break;
 	}
@@ -231,7 +235,7 @@ void countFishes()
 		//myfile << angle << '\n';
 		//myfile << rotation_axis.x << ' ' << rotation_axis.y << ' ' << rotation_axis.z << ' ' << '\n';
 
-		if (glm::length(glm::cross(glm::vec3(0.0, 0.0, 1.0), glm::normalize(eva.speed))) < 0.00001) {
+		/*if (glm::length(glm::cross(glm::vec3(0.0, 0.0, 1.0), glm::normalize(eva.speed))) < 0.00001) {
 			rotation_axis = glm::vec3(0.0, 0.0, 1.0);
 			angle = 0.0;
 			eva.rotation = adam.rotation;
@@ -240,6 +244,9 @@ void countFishes()
 			glm::mat4 rotation = glm::rotate(angle, rotation_axis);
 			eva.rotation = glm::toMat4(glm::normalize(glm::quat(adam.rotation) + glm::quat(rotation)*0.5f));
 		}
+		*/
+		glm::mat4 rotation = glm::rotate(angle, rotation_axis);
+		eva.rotation = glm::toMat4(glm::normalize(glm::quat(adam.rotation) + glm::quat(rotation)*10.5f));
 		newParticles.push_back(eva);
 	}
 	fishes = newParticles;
@@ -248,7 +255,7 @@ void countFishes()
 
 glm::mat4 lightMVP() {
 
-	glm::mat4 perspectiveMatrix = glm::ortho<float>(-61, 61, -61, 61, -61, 61);
+	glm::mat4 perspectiveMatrix = glm::ortho<float>(-61, 61, -61, 61, 20, 91);
 	glm::mat4 cameraMatrix = glm::lookAt<float>(lightPos, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
 	return (perspectiveMatrix * cameraMatrix);
 }
@@ -296,7 +303,6 @@ void renderShadow(glm::vec3 lightPos, glm::mat4 translations[]) {
 
 
 void renderObjects(glm::mat4 perspectiveCameraMatrix, glm::mat4 translations[], glm::vec4 clipPlane) {
-	skyBox.render(perspectiveCameraMatrix, clipPlane, cameraPos);
 	RenderBundle bundle;
 	bundle.cameraPos = cameraPos;
 	bundle.lightPos = lightPos;
@@ -304,6 +310,9 @@ void renderObjects(glm::mat4 perspectiveCameraMatrix, glm::mat4 translations[], 
 	bundle.perspectiveCameraMatrix = perspectiveCameraMatrix;
 	bundle.lightMVP = lightMVP();
 	bundle.modelMatrix = translations[0];
+
+	skyBox.render(bundle);
+
 	glm::mat4 modelMatrix = glm::translate(glm::vec3(1, -0.3, -4))*glm::eulerAngleY(flatten)*glm::scale(glm::vec3(0.2));
 	boat.render(bundle);
 
@@ -443,6 +452,57 @@ void renderScene()
 	glDisable(GL_BLEND);
 
 	glutSwapBuffers();
+}
+
+void RS() {
+	countFishes();
+	glm::mat4 translations[] = { glm::translate(glm::vec3(1, -0.05, -4))*glm::eulerAngleY(flatten)*glm::scale(glm::vec3(0.2)),
+		glm::translate(glm::vec3(5, 2, 2))*glm::translate(glm::vec3(1, -0.3, -4)),
+		glm::translate(glm::vec3(5, 4, 2))*glm::translate(glm::vec3(1, -0.3, -4)),
+		glm::translate(glm::vec3(8, -4, 0)) };
+
+
+	frame_time = time(0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(1.0f, 1.0f, 1.00f, 1.0f);
+
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glm::mat4 trans = lightMVP();
+	glm::mat4 lightMVP = trans;
+
+	lightMVP = trans * translations[0];
+	boat.renderShadow(lightMVP);
+
+
+	lightMVP = trans * translations[1];
+	sphere2.renderShadow(lightMVP);
+
+	lightMVP = trans * translations[2];
+	sphere.renderShadow(lightMVP);
+
+	lightMVP = trans * translations[3];
+	sphere.renderShadow(lightMVP);
+	/*for (int i = -10; i <=10; i++) {
+	for (int j = -10; j <= 10; j++) {
+	lightMVP = trans * glm::translate(glm::vec3(j,1,i)*5);
+	sphere.renderShadow(lightMVP);
+	}
+	}*/
+
+	for (auto fish : fishes) {
+
+		lightMVP = trans * fish_model_matrix(fish);
+		//lightMVP = trans * translate(glm::vec3(1, -2.3, -4));
+		fish.model->renderShadow(lightMVP);
+	}
+	glDisable(GL_BLEND);
+
+	glutSwapBuffers();
+
 }
 void init_fish() {
 

@@ -27,6 +27,21 @@ const float PI = 3.14159265359;
 
 in vec4 lightSpacePos;
 
+
+vec3 add_water(vec3 color, vec3 pos,vec3 cameraPos){
+    vec3 water_color = vec3(0.3,0.55,0.80);
+    if (pos.y>0) return color;
+    float distance = 0;
+    if (cameraPos.y>0){
+        vec3 dir = normalize(pos - cameraPos);
+        distance = length(pos - cameraPos) -length(dir*cameraPos.y);
+    }
+    else{
+        distance = length(pos - cameraPos);
+    }
+    return mix(color,water_color,clamp(distance/40,0.0,0.5));
+}
+
 float Distribution(vec3 N, vec3 H, float roughness)
 {
     float a      = roughness*roughness;
@@ -75,7 +90,7 @@ float calculate_shadow(vec3 normal)
 	vec3 position = (lightSpacePos.xyz/lightSpacePos.w)*0.5+0.5;
 	float closest = texture2D(shadowSampler,position.xy).r;
 	float current = position.z;
-	float bias = max(0.05*(1-dot(vec3(0,1,0),normalize(lightPos))),0.005);
+	float bias = max(0.01*(1-dot(vec3(0,1,0),normalize(lightPos))),0.01);
 	 //bias = 0.0;
 	float shadow = current - bias < closest ? 0.0 : 1.0;
 	return shadow;
@@ -125,6 +140,8 @@ void main()
     vec3 color = ambient + Lo;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.0));  
-   
+	
+    color = add_water(color,interpPos,cameraPos);
+
     FragColor = vec4(color, 1.0);
 }  

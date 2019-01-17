@@ -21,7 +21,17 @@ in vec4 lightSpacePos;
 
 const float n_2 = 1.33;
 const float PI = 3.14159265359;
-  
+
+vec3 add_water(vec3 color, vec3 pos,vec3 cameraPos){
+    vec3 water_color = vec3(0.3,0.55,0.80);
+    if (pos.y>0) return color;
+    float distance = 0;
+    if (cameraPos.y<0){
+        distance = length(pos - cameraPos);
+    }
+    return mix(color,water_color,clamp(distance/40,0.0,0.5));
+}
+
 float Distribution(vec3 N, vec3 H, float roughness)
 {
     float a      = roughness*roughness;
@@ -203,9 +213,15 @@ void main()
 	else{
 	color = refractColor;
 	}
-	color = mix(color,vec3(0.5,0.75,1.0),0.2);
+	//color = mix(color,vec3(0.5,0.75,1.0),0.2);
+	
 	//color = mix(color,vec3(0.0),calculate_shadow());
-
-	gl_FragColor = vec4(color , clamp(distance/4.0,0.0,1.0));
+	color = add_water(color,vertexPos,cameraPos);
+	if (cameraPos.y>0){
+		gl_FragColor = vec4(color , clamp(distance/4.0,0.0,1.0));
+	}
+	else{
+		gl_FragColor = vec4(color , 1);
+	}
 	
 }

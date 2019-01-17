@@ -14,8 +14,9 @@ public:
 
 	void render(glm::mat4 perspectiveCameraMatrix, glm::vec4 clipPlane, glm::vec3 cameraPos);
 
-	void render(glm::mat4 perspectiveCameraMatrix, glm::vec3 cameraPos);
+	void render(RenderBundle bundle);
 
+	void render(glm::mat4 perspectiveCameraMatrix, glm::vec3 cameraPos);
 
 	~RenderSkyBox();
 };

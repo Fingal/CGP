@@ -55,8 +55,8 @@ void RenderWater::init(GLuint& reflectTexture, GLuint& refractTrexture, GLuint& 
 	glEnableVertexAttribArray(glPos);
 	glVertexAttribPointer(glPos, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 	glBindVertexArray(0);
-	dUdVTexture = Core::LoadTexture("E:\\opengl\\CGP2-1 - Copy\\textures\\waterDUDV.png");
-	normalTexture = Core::LoadTexture("E:\\opengl\\CGP2-1 - Copy\\textures\\matchingNormalMap.png");
+	dUdVTexture = Core::LoadTexture("textures/waterDUDV.png");
+	normalTexture = Core::LoadTexture("textures/matchingNormalMap.png");
 
 
 }

@@ -103,12 +103,30 @@ void RenderSkyBox::setProgram(GLuint& program) {
 	glVertexAttribPointer(glPos, 3, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(0));
 	glBindVertexArray(0);
 }
-void RenderSkyBox::render(glm::mat4 perspectiveCameraMatrix,glm::vec4 clipPlane,glm::vec3 cameraPos) {
+void RenderSkyBox::render(glm::mat4 perspectiveCameraMatrix, glm::vec4 clipPlane, glm::vec3 cameraPos) {
 	glUseProgram(program);
 	glBindVertexArray(VertexArray);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 	glUniform4fv(glGetUniformLocation(program, "clip_plane"), 1, (float*)&clipPlane);
 	glm::mat4 MVP = perspectiveCameraMatrix * glm::translate(glm::vec3(cameraPos.x, 0, cameraPos.z));
+	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&MVP);
+	glDrawElements(
+		GL_TRIANGLES,      // mode
+		36,    // count
+		GL_UNSIGNED_SHORT,   // type
+		(void*)0           // element array buffer offset
+	);
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+}
+void RenderSkyBox::render(RenderBundle bundle) {
+	glUseProgram(program);
+	glBindVertexArray(VertexArray);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+	glUniform4fv(glGetUniformLocation(program, "clip_plane"), 1, (float*)&bundle.clipPlane);
+	glUniform3fv(glGetUniformLocation(program, "cameraPos"), 1, (float*)&bundle.cameraPos);
+	glm::mat4 MVP = bundle.perspectiveCameraMatrix * glm::translate(glm::vec3(bundle.cameraPos.x, 0, bundle.cameraPos.z));
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&MVP);
 	glDrawElements(
 		GL_TRIANGLES,      // mode
