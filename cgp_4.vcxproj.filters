@@ -60,6 +60,12 @@
     <ClCompile Include="src\RenderTexture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\RenderTerrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="lib\open-simplex-noise.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="VAOModel.h">
@@ -107,6 +113,12 @@
     <ClInclude Include="src\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\RenderTerrain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lib\open-simplex-noise.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\water.vert">
@@ -149,6 +161,24 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaders\water.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\terrain.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\terrain.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\terrain.geom">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\terrainG.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\terrainG.geom">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\terrainG.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -18,6 +18,7 @@
 #include "RenderWater.h"
 #include "RenderNormalMap.h"
 #include "RenderTexture.h"
+#include "RenderTerrain.h"
 #include "RenderBundle.cpp"
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -39,6 +40,7 @@ RenderNormalMap sphere2;
 RenderNormalMap boat;
 RenderSkyBox skyBox;
 RenderWater water;
+RenderTerrain terrain;
 
 
 GLuint programTexture;
@@ -167,8 +169,6 @@ void countFishes()
 
 	
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.50f, 0.50f, 0.50f, 1.0f);
 
 	glm::mat4 FishModelMatrix;
 	glm::vec3 attractor(60 * sin(time / 2),-120, 60 * cos(time / 2));
@@ -246,7 +246,8 @@ void countFishes()
 		}
 		*/
 		glm::mat4 rotation = glm::rotate(angle, rotation_axis);
-		eva.rotation = glm::toMat4(glm::normalize(glm::quat(adam.rotation) + glm::quat(rotation)*10.5f));
+		eva.rotation = glm::toMat4(glm::normalize(glm::normalize(glm::quat(adam.rotation)) + glm::quat(rotation)*100.5f));
+		//eva.rotation = glm::toMat4(glm::normalize(glm::quat(adam.rotation) + glm::quat(rotation)*100.5f));
 		newParticles.push_back(eva);
 	}
 	fishes = newParticles;
@@ -268,9 +269,12 @@ void renderShadow(glm::vec3 lightPos, glm::mat4 translations[]) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, depthFramebufferObject);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 	glm::mat4 trans = lightMVP();
 	glm::mat4 lightMVP = trans;
+
+	terrain.renderShadow(lightMVP);
+
 
 	lightMVP = trans * translations[0];
 	boat.renderShadow(lightMVP);
@@ -284,6 +288,8 @@ void renderShadow(glm::vec3 lightPos, glm::mat4 translations[]) {
 
 	lightMVP = trans * translations[3];
 	sphere.renderShadow(lightMVP);
+	
+
 	/*for (int i = -10; i <=10; i++) {
 		for (int j = -10; j <= 10; j++) {
 			lightMVP = trans * glm::translate(glm::vec3(j,1,i)*5);
@@ -310,6 +316,9 @@ void renderObjects(glm::mat4 perspectiveCameraMatrix, glm::mat4 translations[], 
 	bundle.perspectiveCameraMatrix = perspectiveCameraMatrix;
 	bundle.lightMVP = lightMVP();
 	bundle.modelMatrix = translations[0];
+
+
+	terrain.render(bundle);
 
 	skyBox.render(bundle);
 
@@ -347,11 +356,13 @@ void renderObjects(glm::mat4 perspectiveCameraMatrix, glm::mat4 translations[], 
 	}
 
 }
+
+
 void renderReflection(glm::mat4 translations[])
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, reflectionFramebufferObject);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 
 	glEnable(GL_CLIP_PLANE0);
 
@@ -373,7 +384,7 @@ void renderRefraction(glm::mat4 translations[])
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, refractionFramebufferObject);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
 
 	glEnable(GL_CLIP_PLANE0);
 
@@ -585,7 +596,9 @@ void init()
 	sphere2.loadNormal("textures/rustediron2_normal1.png");
 	sphere2.setShadowProgram(programDepth, depthTexture);
 
-
+	terrain = RenderTerrain();
+	terrain.init();
+	terrain.setShadowProgram(programDepth, depthTexture);
 
 	initFBO(reflectionFramebufferObject, reflectTexture, reflectDepthTexture);
 	initFBO(refractionFramebufferObject, refractTexture, refractDepthTexture);
@@ -648,7 +661,9 @@ void init_no_texture()
 	sphere2.setProgram(programNormal);
 	sphere2.setShadowProgram(programDepth, depthTexture);
 
-
+	terrain = RenderTerrain();
+	terrain.init();
+	terrain.setShadowProgram(programDepth, depthTexture);
 
 	initFBO(reflectionFramebufferObject, reflectTexture, reflectDepthTexture);
 	initFBO(refractionFramebufferObject, refractTexture, refractDepthTexture);
