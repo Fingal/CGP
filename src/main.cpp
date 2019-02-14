@@ -33,8 +33,11 @@ struct particle {
 	glm::vec3 rotation_axis;
 };
 std::vector<particle> fishes;
+particle shark_particle;
+
 
 RenderTexture fish;
+RenderTexture shark;
 RenderMaterial sphere;
 RenderNormalMap sphere2;
 RenderNormalMap boat;
@@ -96,7 +99,12 @@ float quad[] = {
 	-0.25, -0.25, 0.0, 1.0
 };
 
-
+bool sharkCanSwimThere() {
+	if (terrain.get_density(shark_particle.location) < 0) {
+		return false;
+	}
+	return true;
+}
 
 float sensitivity = 0.02;
 float flatten = 0.0;
@@ -104,17 +112,16 @@ float coef1 = 0.0;
 float coef2 = 0.0;
 void keyboard(unsigned char key, int x, int y)
 {
-
 	float angleSpeed = 0.1f;
 	float moveSpeed = 0.1f;
 	switch (key)
 	{
 	//case 'z': rotationChangeXYZ.z += 0.1f; break;
 	//case 'x': rotationChangeXYZ.z -= 0.1f; break;
-	case 'w': cameraPos += cameraDir * moveSpeed; break;
-	case 's': cameraPos -= cameraDir * moveSpeed; break;
-	case 'd': cameraPos += cameraSide * moveSpeed; break;
-	case 'a': cameraPos -= cameraSide * moveSpeed; break;
+	case 'w': if (sharkCanSwimThere()) { cameraPos += cameraDir * moveSpeed; } break;
+	case 's': if (sharkCanSwimThere()) { cameraPos -= cameraDir * moveSpeed; } break;
+	case 'd': if (sharkCanSwimThere()) { cameraPos += cameraSide * moveSpeed; } break;
+	case 'a': if (sharkCanSwimThere()) { cameraPos -= cameraSide * moveSpeed; } break;
 	case '+': sensitivity = (sensitivity < 0.2) ? sensitivity + 0.2 : 0.02; ; break;
 	case '1': coef1 = (coef1 < 1.0) ? coef1 + 0.1 : 0.00; ; break;
 	case '2': coef2 = (coef2 < 1.0) ? coef1 + 0.1 : 0.00; ; break;
@@ -166,10 +173,6 @@ void countFishes()
 	if ((time - old_time) > 1 || (time - old_time) < 0) {
 		old_time = time - 0.1;
 	}
-
-	
-
-
 	glm::mat4 FishModelMatrix;
 	glm::vec3 attractor(60 * sin(time / 2),-120, 60 * cos(time / 2));
 	//glm::vec3 attractor(0,0, 10);
@@ -226,9 +229,41 @@ void countFishes()
 			eva.speed -= glm::vec3(0, 100 * (time - old_time), 0);
 		}
 		else {
-			eva.speed = eva.speed + (40.0f * separation + 0.20f * cohesion / cohesion_size + 0.300f * aligment / aligment_size + 10 * xxx)*(time - old_time);
+			eva.speed = eva.speed + (40.0f * separation + 0.20f * cohesion / cohesion_size + 0.300f * aligment / aligment_size )*(time - old_time);
 		}
-		eva.location = adam.location + eva.speed*(time - old_time);
+
+		//tutaj--
+		float distanceToShark = glm::distance(adam.location, cameraPos * 10);
+
+		if (terrain.get_density((adam.location + glm::normalize(eva.speed))/10.0) < 0) {
+			glm::vec3 normal = terrain.getNormal((adam.location + glm::normalize(eva.speed)) / 10.0);
+			//eva.speed -= normal * glm::dot(normal,eva.speed)*(time - old_time)*1;
+			eva.speed = (1- (time - old_time))*eva.speed + (time - old_time)*glm::reflect(eva.speed, normal);
+		}
+		glm::vec3 sharkPos = cameraPos * 10;
+		float sharkCoef = fmin(1, fmax(0, distanceToShark / 75));
+		//std::cout << distanceToShark << std::endl;
+		//glm::vec3 sharkPos = cameraPos * 10;
+		//* std::min(300 / distanceToShark -1, 10.0f)
+		eva.speed += (((eva.location - sharkPos) / distanceToShark) * 50*(1-sharkCoef) + 10 * xxx)*(time-old_time);
+
+		if (glm::length(eva.speed) > 100) {
+		//	//std::cout << eva.speed.x << " " << eva.speed.y << " " << eva.speed.z << std::endl;
+		//	std::cout << eva.speed.x*eva.speed.y*eva.speed.z << std::endl;
+			eva.speed = eva.speed * 0.9;
+		}
+		//eva.speed.x*eva.speed.y*eva.speed.z > 10
+
+		if (terrain.get_density((adam.location + eva.speed*(time - old_time)) / 10.0) < 0) {
+			glm::vec3 normal = terrain.getNormal((adam.location + glm::normalize(eva.speed)) / 10.0);
+
+			glm::vec3 speed=glm::reflect(eva.speed, normal);
+			eva.location = adam.location + speed*(time - old_time);
+		}
+		else {
+			eva.location = adam.location + eva.speed*(time - old_time);
+		}
+		//--
 
 		glm::vec3 rotation_axis = glm::normalize(glm::cross(glm::vec3(0.0, 0.0, 1.0), glm::normalize(eva.speed)));
 		float angle = glm::acos(glm::dot(rotation_axis, glm::normalize(eva.speed)));
@@ -248,6 +283,7 @@ void countFishes()
 		glm::mat4 rotation = glm::rotate(angle, rotation_axis);
 		eva.rotation = glm::toMat4(glm::normalize(glm::normalize(glm::quat(adam.rotation)) + glm::quat(rotation)*100.5f));
 		//eva.rotation = glm::toMat4(glm::normalize(glm::quat(adam.rotation) + glm::quat(rotation)*100.5f));
+
 		newParticles.push_back(eva);
 	}
 	fishes = newParticles;
@@ -255,18 +291,16 @@ void countFishes()
 }
 
 glm::mat4 lightMVP() {
-
 	glm::mat4 perspectiveMatrix = glm::ortho<float>(-61, 61, -61, 61, 20, 91);
 	glm::mat4 cameraMatrix = glm::lookAt<float>(lightPos, glm::vec3(0, 0, 0), glm::vec3(0, 0, 1));
 	return (perspectiveMatrix * cameraMatrix);
 }
+
 glm::mat4 fish_model_matrix(particle fish) {
 	return glm::translate(fish.location / 10.0)*fish.rotation*glm::scale(glm::vec3(0.25))*glm::translate(glm::vec3(2.5, 0, -1));
 }
 
-
 void renderShadow(glm::vec3 lightPos, glm::mat4 translations[]) {
-
 	glBindFramebuffer(GL_FRAMEBUFFER, depthFramebufferObject);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.7f, 0.7f, 0.7f, 1.0f);
@@ -275,10 +309,8 @@ void renderShadow(glm::vec3 lightPos, glm::mat4 translations[]) {
 
 	terrain.renderShadow(lightMVP);
 
-
 	lightMVP = trans * translations[0];
 	boat.renderShadow(lightMVP);
-
 
 	lightMVP = trans * translations[1];
 	sphere2.renderShadow(lightMVP);
@@ -289,7 +321,6 @@ void renderShadow(glm::vec3 lightPos, glm::mat4 translations[]) {
 	lightMVP = trans * translations[3];
 	sphere.renderShadow(lightMVP);
 	
-
 	/*for (int i = -10; i <=10; i++) {
 		for (int j = -10; j <= 10; j++) {
 			lightMVP = trans * glm::translate(glm::vec3(j,1,i)*5);
@@ -298,15 +329,12 @@ void renderShadow(glm::vec3 lightPos, glm::mat4 translations[]) {
 	}*/
 
 	for (auto fish : fishes) {
-
 		lightMVP = trans * fish_model_matrix(fish);
 		//lightMVP = trans * translate(glm::vec3(1, -2.3, -4));
 		fish.model->renderShadow(lightMVP);
 	}
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-
 
 void renderObjects(glm::mat4 perspectiveCameraMatrix, glm::mat4 translations[], glm::vec4 clipPlane) {
 	RenderBundle bundle;
@@ -317,7 +345,6 @@ void renderObjects(glm::mat4 perspectiveCameraMatrix, glm::mat4 translations[], 
 	bundle.lightMVP = lightMVP();
 	bundle.modelMatrix = translations[0];
 
-
 	terrain.render(bundle);
 
 	skyBox.render(bundle);
@@ -325,7 +352,6 @@ void renderObjects(glm::mat4 perspectiveCameraMatrix, glm::mat4 translations[], 
 	glm::mat4 modelMatrix = glm::translate(glm::vec3(1, -0.3, -4))*glm::eulerAngleY(flatten)*glm::scale(glm::vec3(0.2));
 	boat.render(bundle);
 
-	
 	bundle.modelMatrix = translations[1];
 	modelMatrix = glm::translate(glm::vec3(3, 0, 2))*glm::translate(glm::vec3(1, -0.3, -4));
 	sphere2.render(bundle);
@@ -354,9 +380,9 @@ void renderObjects(glm::mat4 perspectiveCameraMatrix, glm::mat4 translations[], 
 		glm::vec3 xxxx = fish.location / 20.0;
 		//std::cout << " " << xxxx.x << " " << xxxx.y << " "<< xxxx.z << std::endl;
 	}
-
+	bundle.modelMatrix = glm::translate(cameraPos)*glm::mat4(glm::inverse(rotation))*glm::translate(glm::vec3(0,-1,-5))*glm::yawPitchRoll(glm::pi<float>(),0.0f,0.0f)*glm::translate(glm::vec3(2.5, 0, -1));
+	shark.render(bundle);
 }
-
 
 void renderReflection(glm::mat4 translations[])
 {
@@ -375,11 +401,10 @@ void renderReflection(glm::mat4 translations[])
 
 	renderObjects(perspectiveCameraMatrix, translations, glm::vec4(0, 1, 0, -0.0));
 
-
 	glDisable(GL_CLIP_PLANE0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 }
+
 void renderRefraction(glm::mat4 translations[])
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, refractionFramebufferObject);
@@ -397,13 +422,10 @@ void renderRefraction(glm::mat4 translations[])
 	else {
 		renderObjects(perspectiveCameraMatrix, translations, glm::vec4(0, -1, 0, -0.0));
 	}
-	
-	
-
 	glDisable(GL_CLIP_PLANE0);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
 }
+
 void initFBO(GLuint& FBO, GLuint& colorTexture, GLuint& depthTexture) {
 	glGenFramebuffers(1, &FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
@@ -419,7 +441,6 @@ void initFBO(GLuint& FBO, GLuint& colorTexture, GLuint& depthTexture) {
 
 	//Attach color texture to frame buffer
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTexture, 0);
-
 
 	glGenTextures(1, &depthTexture);
 	glBindTexture(GL_TEXTURE_2D, depthTexture);
@@ -488,7 +509,6 @@ void RS() {
 	lightMVP = trans * translations[0];
 	boat.renderShadow(lightMVP);
 
-
 	lightMVP = trans * translations[1];
 	sphere2.renderShadow(lightMVP);
 
@@ -513,12 +533,9 @@ void RS() {
 	glDisable(GL_BLEND);
 
 	glutSwapBuffers();
-
 }
+
 void init_fish() {
-
-
-
 	fish = RenderTexture();
 	fish.loadModelFromFile("models/fish.obj");
 	fish.setProgram(programTexture);
@@ -536,9 +553,22 @@ void init_fish() {
 		p.rotation = glm::mat4(1);
 		fishes.push_back(p);
 	}
-
 }
 
+void init_shark() {
+	shark = RenderTexture();
+	//TODO: change model to shark
+	shark.loadModelFromFile("models/fish.obj");
+	shark.setProgram(programTexture);
+	shark.loadTexture("textures/fish_texture.png");
+	shark.setShadowProgram(programDepth, depthTexture);
+	particle shark_particle;
+	shark_particle.model = &fish;
+	shark_particle.location = cameraPos;
+	shark_particle.speed = glm::vec3(0.0, 0.0, 30.0);
+	shark_particle.rotation_axis = glm::vec3(0.0, 0.0, 1.0);
+	shark_particle.rotation = glm::mat4(1);
+}
 
 void init()
 {
@@ -609,7 +639,9 @@ void init()
 	water.setShadowProgram(programDepth, depthTexture);
 
 	init_fish();
+	init_shark();
 }
+
 void init_no_texture()
 {
 	srand(time(0));
@@ -674,6 +706,7 @@ void init_no_texture()
 	water.setShadowProgram(programDepth, depthTexture);
 
 	init_fish();
+	init_shark();
 }
 
 void shutdown()	
@@ -697,7 +730,7 @@ int main(int argc, char ** argv)
 	glutInitWindowPosition(200, 200);
 	glutInitWindowSize(1024, 1024);
 	glutCreateWindow("CGP");
-	glewInit();
+	std::cout << glewInit() << std::endl;
 
 	//init();
 	init_no_texture();
