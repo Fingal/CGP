@@ -31,6 +31,8 @@ public:
 
 	float get_density(glm::vec3 pos);
 
+	glm::vec3 getNormal(glm::vec3 pos);
+
 	void init_vertex_to_edge();
 
 	void sampleTerrain(glm::vec3 pos, float * values, float scale);
