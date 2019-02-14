@@ -699,8 +699,8 @@ int main(int argc, char ** argv)
 	glutCreateWindow("CGP");
 	glewInit();
 
-	init();
-	//init_no_texture();
+	//init();
+	init_no_texture();
 	glutKeyboardFunc(keyboard);
 	glutPassiveMotionFunc(mouse);
 	glutDisplayFunc(renderScene);

@@ -334,12 +334,13 @@ void RenderTerrain::buildPolygons(glm::vec3 p,std::vector<glm::vec3>& positions,
 			float value2 = abs(vertices[v2]);
 			glm::vec3 pos = (((index_to_pos[v1] * value2 + index_to_pos[v2] * value1) / (value1 + value2))*scale/2.0)+p;
 			positions.push_back(pos);
-			//normals.push_back(glm::normalize(glm::vec3(get_density(pos + glm::vec3(0.1, 0, 0)), get_density(pos + glm::vec3(0, 0.1, 0)), get_density(pos + glm::vec3(0, 0, 0.1)))));
+			//gradient
+			normals.push_back(glm::normalize(glm::vec3(get_density(pos + glm::vec3(0.1, 0, 0))-get_density(pos - glm::vec3(0.1, 0, 0)), get_density(pos + glm::vec3(0, 0.1, 0)) - get_density(pos - glm::vec3(0, 0.1, 0)), get_density(pos + glm::vec3(0, 0, 0.1) - get_density(pos - glm::vec3(0, 0, 0.1))))));
 		}
-		glm::vec3 n = -glm::normalize(glm::cross(positions[positions.size() - 1] - positions[positions.size() - 3], positions[positions.size() - 2] - positions[positions.size() - 3]));
-		normals.push_back(n);
-		normals.push_back(n);
-		normals.push_back(n);
+		//glm::vec3 n = -glm::normalize(glm::cross(positions[positions.size() - 1] - positions[positions.size() - 3], positions[positions.size() - 2] - positions[positions.size() - 3]));
+		//normals.push_back(n);
+		//normals.push_back(n);
+		//normals.push_back(n);
 	}
 
 }
@@ -353,8 +354,9 @@ float RenderTerrain::get_density(glm::vec3 pos) {
 	//return pos.y+10 + simplex_noise3d(ctx1, pos/20)*2.4 + simplex_noise3d(ctx1, pos / 7) * 0.66 + simplex_noise3d(ctx1, pos / 11) * 0.74 + simplex_noise3d(ctx1, pos * 1.71) * 0.24 + simplex_noise3d(ctx1, pos * 3) * 0.14 + glm::sin(warp.z / 10) * 3 + glm::sin(warp.x / 10) * 3;
 	float hardLimit = 0;
 	if (pos.y < 0 && ((pos.x<start || pos.x>end - scale) || (pos.z<start || pos.z>end - scale))) hardLimit = -1000;
+	//return pos.y - pos.x*pos.x / 100 - pos.z*pos.z / 100;
 	//return pos.y;
-	return pos.y + (50*exp(-(pos.x*pos.x+pos.z*pos.z)/1200) -20) + open_simplex_noise2(ctx4,strong_warp.z / 25.7,strong_warp.x / 25.6) * 21.3+fmax(0,(-pos.y*fabs(pos.y)+9)*0.008)*simplex_noise3d(ctx3,pos/8.3)+0.03*simplex_noise3d(ctx1,pos*2)+hardLimit;
+	return pos.y + (50*exp(-(pos.x*pos.x+pos.z*pos.z)/1200) -20) + open_simplex_noise2(ctx4, strong_warp.z / 25.7, strong_warp.x / 25.6) * 21.3 + open_simplex_noise3(ctx4, strong_warp.z / 3.7, strong_warp.x / 3.56,1) * 7.3 + fmax(0,(-pos.y*fabs(pos.y)+9)*0.008)*simplex_noise3d(ctx3,pos/8.3)+0.03*simplex_noise3d(ctx1,pos*2)+hardLimit;
 	//return pos.y + 4 + glm::sin(strong_warp.z / 8) * 7 + glm::sin(strong_warp.x / 8) * 7;
 	//return glm::length(pos) -10.5;
 }
@@ -527,7 +529,7 @@ void RenderTerrain::render(glm::mat4 perspectiveCameraMatrix, glm::vec4 clipPlan
 	glUniform4fv(glGetUniformLocation(program, "clip_plane"), 1, (float*)&clipPlane);
 	glm::mat4 MVP = perspectiveCameraMatrix * glm::translate(glm::vec3(cameraPos.x, 0, cameraPos.z));
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&MVP);
-	glDrawArrays(GL_TRIANGLES, 0, vertexSize);
+	glDrawArrays(GL_TRIANGLES, 0, vertexSize/3);
 	glBindVertexArray(0);
 	glUseProgram(0);
 
@@ -541,7 +543,7 @@ void RenderTerrain::render(RenderBundle bundle) {
 	glUniformMatrix4fv(glGetUniformLocation(program, "lightMVP"), 1, GL_FALSE, (float*)&bundle.lightMVP);
 	glm::mat4 MVP = bundle.perspectiveCameraMatrix;
 	glUniformMatrix4fv(glGetUniformLocation(program, "modelViewProjectionMatrix"), 1, GL_FALSE, (float*)&MVP);
-	glDrawArrays(GL_TRIANGLES, 0, vertexSize);
+	glDrawArrays(GL_TRIANGLES, 0, vertexSize/3);
 	glBindVertexArray(0);
 	glUseProgram(0);
 
@@ -580,7 +582,7 @@ void RenderTerrain::renderShadow(glm::mat4 lightMVP) {
 	glUseProgram(shadowProgram);
 	glBindVertexArray(VertexArray);
 	glUniformMatrix4fv(glGetUniformLocation(shadowProgram, "lightMVPMatrix"), 1, GL_FALSE, (float*)&lightMVP);
-	glDrawArrays(GL_TRIANGLES, 0, vertexSize);
+	glDrawArrays(GL_TRIANGLES, 0, vertexSize/3);
 	glBindVertexArray(0);
 	glUseProgram(0);
 
